@@ -1,5 +1,6 @@
 FROM node:20-alpine
 
+# 작업 디렉터리 설정
 WORKDIR /app
 
 # 빌드에 필요한 도구 설치 및 pnpm 설치
@@ -9,17 +10,17 @@ RUN apk add --no-cache python3 make g++ && npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install -r --frozen-lockfile
 
-# backend 소스 코드 복사 및 backend 작업 디렉터리 설정
-COPY packages/backend /app/packages/backend
+# 전체 모노레포 소스 코드 복사 (backend와 shared 등 모든 패키지 포함)
+COPY . .
 
 # backend 디렉터리로 이동
 WORKDIR /app/packages/backend
 
-# NestJS 빌드 (TypeScript 컴파일)
-RUN pnpm build
+# backend 패키지에서 빌드 실행
+RUN pnpm --filter ./packages/backend... build
 
-# 애플리케이션이 실행될 포트 노출
+# 애플리케이션이 실행될 포트 노출  
 EXPOSE 3000
 
-# 실행 명령어 - 빌드 결과를 실행
+# 애플리케이션 실행 명령어
 CMD ["node", "dist/main"]
