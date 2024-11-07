@@ -3,7 +3,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # 빌드에 필요한 도구 설치 및 pnpm 설치
-RUN npm install -g pnpm && pnpm install
+RUN npm install -g pnpm
+RUN pnpm --version
 
 # 애플리케이션 소스 코드 복사
 COPY . .
