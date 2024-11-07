@@ -12,50 +12,34 @@ jobs:
       contents: read
       deployments: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 9.4.0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '22.9.0'
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install
-      # shared 패키지 먼저 빌드
-      - name: Build shared package
-        id: build-shared
-        working-directory: packages/shared
-        run: pnpm build
-        continue-on-error: true
-
-      # 🚨 shared 빌드 실패 시 전체 프로세스 중단
-      - name: Check shared build
-        if: steps.build-shared.outcome == 'failure'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.setFailed('Shared package build failed');
+      # 체크아웃을 하면 github action이 돌아가는 컴퓨터에서 project의 root에 위치하게 된다. 
+      - name: Checkout
+        uses: actions/checkout@v3
       
+      # .env file을 github action 런타임에 주입할 수 있도록 한다. 
+      - name: Inect .env file
+        run: echo "${{ secrets.BACKEND_ENV}}" > ./packages/backend/.env
+
+      # NCP Container Registry 로그인
+      - name: Login to NCP Container Registry
+        uses: docker/login-action@v2
+        with:
+            registry: ${{ secrets.CONTAINER_REGISTRY_URL}}
+            username: ${{ secrets.NCP_ACCESS_KEY}}
+            password: ${{ secrets.NCP_SECRET_KEY}}
+
       # backend 빌드 및 배포
-      - name: Build and Deploy backend
-        id: deploy
-        if: steps.build-shared.outcome == 'success'
-        working-directory: packages/backend
-        env:
-          NCP_ACCESS_KEY: ${{ secrets.NCP_ACCESS_KEY }}
-          NCP_SECRET_KEY: ${{ secrets.NCP_SECRET_KEY }}
-          NCP_BUCKET_NAME: ${{ secrets.NCP_BUCKET_NAME }}
-        run: |
-          echo "🏗️ Building backend..."
-          pnpm build
-          
-          echo "📦 Installing NCP CLI..."
-          pip install ncli
-          
-          echo "🚀 Deploying to NCP Object Storage..."
-          ncli objectstorage cp -r ./dist/* s3://$NCP_BUCKET_NAME/
-        continue-on-error: true
+      - name: Build and Push backend
+        uses: docker/build-push-action@v3
+        with:
+            context: .
+            file: ./packages/backend/Dockerfile
+            push:true
+            tags: ${{secrets.CONTAINER_REGISTRY_URL}}/nodejs-server:latest
+            cache-from: type=registry, ref=${{secrets.CONTAINER_REGISTRY_URL}}/prv-backend:latest
+            cache-to: type=inline
+            secrets: |
+                GIT_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN}}
 
       # 배포 결과 처리
       - name: Process Deploy Result
