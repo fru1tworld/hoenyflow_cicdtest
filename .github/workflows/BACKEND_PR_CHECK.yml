@@ -1,0 +1,102 @@
+name: backend PR Check
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'packages/backend/**'
+      - 'packages/shared/**'
+
+jobs:
+  build-check:
+    if: contains(github.head_ref, 'dev-fe')
+    runs-on: ubuntu-latest
+    
+    # Checks API 권한
+    permissions:
+      checks: write
+      
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9.4.0
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22.9.0'
+          cache: 'pnpm'
+          
+      - name: Inject .env file
+        run: echo "${{ secrets.BACKEND_ENV }}" > ./.env
+  
+  
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+    
+      - name: Login to NCP Container Registry
+        uses: docker/login-action@v2
+        with:
+            registry: ${{secrets.CONTAINER_REGISTRY_URL}}
+            username: ${{secrets.NCP_ACCESS_KEY}}
+            password: ${{secrets.NCP_SECRET_KEY}}
+      - name: Install dependencies
+        run: pnpm install
+        
+        id: build
+        working-directory: packages/backend
+        run: pnpm build
+        continue-on-error: true
+
+      - name: Process Build Result
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log("Repo context:", context.repo);  // repo 정보 확인용 로그
+            const buildOutcome = '${{ steps.build.outcome }}';
+      
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'backend Build',
+              head_sha: context.payload.pull_request.head.sha,  
+              status: 'completed',
+              conclusion: buildOutcome === 'success' ? 'success' : 'failure',
+              output: {
+                title: buildOutcome === 'success' 
+                  ? '🎉 backend Build Successful' 
+                  : '❌ backend Build Failed',
+                
+                summary: buildOutcome === 'success'
+                  ? [
+                      '## ✅ Build Status: Success',
+                      '',
+                      '### Build Information:',
+                      '- **Build Time**: ' + new Date().toISOString(),
+                      '- **Branch**: ' + context.ref,
+                      '',
+                      '✨ Ready to be reviewed!'
+                    ].join('\n')
+                  : [
+                      '## ❌ Build Status: Failed',
+                      '',
+                      '### Error Information:',
+                      '- **Build Time**: ' + new Date().toISOString(),
+                      '- **Branch**: ' + context.ref,
+                      '',
+                      '### Next Steps:',
+                      '1. Check the build logs for detailed error messages',
+                      '2. Fix the identified issues',
+                      '3. Push your changes to trigger a new build',
+                      '',
+                      '> Need help? Contact the backend team.'
+                    ].join('\n'),
+                
+                text: buildOutcome === 'success'
+                  ? '자세한 빌드 로그는 Actions 탭에서 확인하실 수 있습니다.'
+                  : '빌드 실패 원인을 확인하시려면 위의 "Details"를 클릭하세요.'
+              }
+            });
+            if (buildOutcome === 'failure') {
+              core.setFailed('backend build failed');
+            }
