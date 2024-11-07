@@ -46,7 +46,6 @@ jobs:
           script: |
             const sharedOutcome = '${{ steps.build-shared.outcome }}';
             const deployOutcome = '${{ steps.deploy.outcome }}';
-            const {변수이름} = '${{ steps.{참조되는 id}.outcome }}';
             const finalOutcome = sharedOutcome === 'success' && deployOutcome === 'success' ? 'success' : 'failure';
             
             // GitHub Checks로 배포 상태 보고
