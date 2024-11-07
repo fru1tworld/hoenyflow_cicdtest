@@ -88,56 +88,65 @@ jobs:
               dockerOutcome === 'success' 
                 ? 'success' : 'failure';
 
-            const repoName = context.repo.repo; 
-            await github.rest.checks.create({
-              repo: repoName, 
-              name: '프론트엔드 배포 상태',
-              head_sha: context.sha,
-              status: 'completed',
-              conclusion: finalOutcome,
-              output: {
-                title: finalOutcome === 'success' 
-                  ? '🚀 프론트엔드 배포 성공' 
-                  : '❌ 프론트엔드 배포 실패',
-                summary: finalOutcome === 'success'
-                  ? [
-                      '## ✅ 배포 상태: 성공',
-                      '',
-                      '### 배포 정보:',
-                      '- 📅 **배포 시간**: ' + new Date().toISOString(),
-                      '- 🌏 **환경**: Production',
-                      '- 📦 **빌드된 패키지**: shared, frontend',
-                      '- 🎯 **대상**: NCP Container Registry',
-                      '',
-                      '### 빌드 단계 결과:',
-                      '- ✅ 의존성 설치: 성공',
-                      '- ✅ Shared 패키지 빌드: 성공',
-                      '- ✅ Frontend 패키지 빌드: 성공',
-                      '- ✅ Docker 이미지 빌드 및 푸시: 성공',
-                      '',
-                      '🎉 프로덕션 환경에 성공적으로 배포되었습니다!'
-                    ].join('\n')
-                  : [
-                      '## ❌ 배포 상태: 실패',
-                      '',
-                      '### 오류 정보:',
-                      '- 📅 **실패 시간**: ' + new Date().toISOString(),
-                      '- 🚨 **실패 단계**: ' + getFailedStep(),
-                      '',
-                      '### 빌드 단계 결과:',
-                      `- ${installOutcome === 'success' ? '✅' : '❌'} 의존성 설치: ${installOutcome}`,
-                      `- ${sharedOutcome === 'success' ? '✅' : '❌'} Shared 패키지 빌드: ${sharedOutcome}`,
-                      `- ${frontendOutcome === 'success' ? '✅' : '❌'} Frontend 패키지 빌드: ${frontendOutcome}`,
-                      `- ${dockerOutcome === 'success' ? '✅' : '❌'} Docker 이미지 빌드 및 푸시: ${dockerOutcome}`,
-                      '',
-                      '### 문제 해결 방법:',
-                      '1. 실패한 단계의 로그를 확인해주세요',
-                      '2. 의존성 및 빌드 스크립트를 확인해주세요',
-                      '3. 환경 변수 설정을 확인해주세요',
-                      '',
-                    ].join('\n')
-              }
-            });
+            // GitHub API 호출에 필요한 정보 설정
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            try {
+              await github.rest.checks.create({
+                owner,  // owner 명시적 지정
+                repo,   // repo 명시적 지정
+                name: '프론트엔드 배포 상태',
+                head_sha: context.sha,
+                status: 'completed',
+                conclusion: finalOutcome,
+                output: {
+                  title: finalOutcome === 'success' 
+                    ? '🚀 프론트엔드 배포 성공' 
+                    : '❌ 프론트엔드 배포 실패',
+                  summary: finalOutcome === 'success'
+                    ? [
+                        '## ✅ 배포 상태: 성공',
+                        '',
+                        '### 배포 정보:',
+                        '- 📅 **배포 시간**: ' + new Date().toISOString(),
+                        '- 🌏 **환경**: Production',
+                        '- 📦 **빌드된 패키지**: shared, frontend',
+                        '- 🎯 **대상**: NCP Container Registry',
+                        '',
+                        '### 빌드 단계 결과:',
+                        '- ✅ 의존성 설치: 성공',
+                        '- ✅ Shared 패키지 빌드: 성공',
+                        '- ✅ Frontend 패키지 빌드: 성공',
+                        '- ✅ Docker 이미지 빌드 및 푸시: 성공',
+                        '',
+                        '🎉 프로덕션 환경에 성공적으로 배포되었습니다!'
+                      ].join('\n')
+                    : [
+                        '## ❌ 배포 상태: 실패',
+                        '',
+                        '### 오류 정보:',
+                        '- 📅 **실패 시간**: ' + new Date().toISOString(),
+                        '- 🚨 **실패 단계**: ' + getFailedStep(),
+                        '',
+                        '### 빌드 단계 결과:',
+                        `- ${installOutcome === 'success' ? '✅' : '❌'} 의존성 설치: ${installOutcome}`,
+                        `- ${sharedOutcome === 'success' ? '✅' : '❌'} Shared 패키지 빌드: ${sharedOutcome}`,
+                        `- ${frontendOutcome === 'success' ? '✅' : '❌'} Frontend 패키지 빌드: ${frontendOutcome}`,
+                        `- ${dockerOutcome === 'success' ? '✅' : '❌'} Docker 이미지 빌드 및 푸시: ${dockerOutcome}`,
+                        '',
+                        '### 문제 해결 방법:',
+                        '1. 실패한 단계의 로그를 확인해주세요',
+                        '2. 의존성 및 빌드 스크립트를 확인해주세요',
+                        '3. 환경 변수 설정을 확인해주세요',
+                        '',
+                      ].join('\n')
+                }
+              });
+            } catch (error) {
+              console.error('Error creating check:', error);
+              core.setFailed(`Check creation failed: ${error.message}`);
+            }
 
             if (finalOutcome === 'failure') {
               core.setFailed('배포 프로세스가 실패했습니다');
