@@ -3,8 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # 빌드에 필요한 도구 설치 및 pnpm 설치
-RUN apk add --no-cache python3 make g++ \
-    && npm install -g pnpm
+RUN apk add --no-cache python3 make g++ && npm install -g pnpm
 
 # 루트의 package.json 및 pnpm-lock.yaml 복사 및 종속성 설치
 COPY package.json pnpm-lock.yaml ./
