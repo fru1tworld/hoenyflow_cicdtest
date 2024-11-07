@@ -28,8 +28,6 @@ jobs:
             file: ./packages/backend/Dockerfile
             push: true
             tags: ${{secrets.CONTAINER_REGISTRY_URL}}/nodejs-server:latest
-            cache-from: type=registry, ref=${{ secrets.CONTAINER_REGISTRY_URL }}/prv-backend:latest
-            cache-to: type=inline
       # 배포 결과 처리
       - name: Process Deploy Result
         uses: actions/github-script@v6
