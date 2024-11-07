@@ -5,12 +5,15 @@ on:
     paths:
       - "packages/frontend/**"
       - "packages/shared/**"
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v3
@@ -67,7 +70,14 @@ jobs:
         if: always()
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const getKSTDate = () => {
+              const date = new Date();
+              date.setHours(date.getHours() + 9); // UTC+9 (한국 시간)
+              return date.toISOString().replace('Z', '+09:00');
+            };
+
             const installOutcome = '${{ steps.install.outcome }}';
             const sharedOutcome = '${{ steps.build-shared.outcome }}';
             const frontendOutcome = '${{ steps.build-frontend.outcome }}';
@@ -88,14 +98,9 @@ jobs:
               dockerOutcome === 'success' 
                 ? 'success' : 'failure';
 
-            // GitHub API 호출에 필요한 정보 설정
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-
             try {
               await github.rest.checks.create({
-                owner,  // owner 명시적 지정
-                repo,   // repo 명시적 지정
+                ...context.repo,
                 name: '프론트엔드 배포 상태',
                 head_sha: context.sha,
                 status: 'completed',
@@ -109,7 +114,7 @@ jobs:
                         '## ✅ 배포 상태: 성공',
                         '',
                         '### 배포 정보:',
-                        '- 📅 **배포 시간**: ' + new Date().toISOString(),
+                        '- 📅 **배포 시간**: ' + getKSTDate(),
                         '- 🌏 **환경**: Production',
                         '- 📦 **빌드된 패키지**: shared, frontend',
                         '- 🎯 **대상**: NCP Container Registry',
@@ -126,7 +131,7 @@ jobs:
                         '## ❌ 배포 상태: 실패',
                         '',
                         '### 오류 정보:',
-                        '- 📅 **실패 시간**: ' + new Date().toISOString(),
+                        '- 📅 **실패 시간**: ' + getKSTDate(),
                         '- 🚨 **실패 단계**: ' + getFailedStep(),
                         '',
                         '### 빌드 단계 결과:',
@@ -146,8 +151,4 @@ jobs:
             } catch (error) {
               console.error('Error creating check:', error);
               core.setFailed(`Check creation failed: ${error.message}`);
-            }
-
-            if (finalOutcome === 'failure') {
-              core.setFailed('배포 프로세스가 실패했습니다');
             }
