@@ -56,7 +56,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v3
         with:
-          context: ./packages/frontend
+          context: .
           file: ./packages/frontend/Dockerfile
           push: true
           tags: ${{ secrets.CONTAINER_REGISTRY_URL }}/frontend:latest
