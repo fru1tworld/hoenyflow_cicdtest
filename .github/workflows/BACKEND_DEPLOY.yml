@@ -6,12 +6,11 @@ on:
       - 'packages/backend/**'
       - 'packages/shared/**'
 jobs:
-  deploy:
+  push_to_registry:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
     steps:
+      - name: Print a message
+        run: echo "${{secrets.TEST}}"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up Docker Buildx
@@ -22,9 +21,7 @@ jobs:
           registry: ${{ secrets.NCP_CONTAINER_REGISTRY }}
           username: ${{ secrets.NCP_ACCESS_KEY }}
           password: ${{ secrets.NCP_SECRET_KEY }}
-
-      # backend 빌드 및 배포
-      - name: Build and Push backend
+      - name: Build and Push
         uses: docker/build-push-action@v3
         with:
             context: .
@@ -33,7 +30,6 @@ jobs:
             tags: ${{secrets.CONTAINER_REGISTRY_URL}}/nodejs-server:latest
             cache-from: type=registry, ref=${{ secrets.CONTAINER_REGISTRY_URL }}/prv-backend:latest
             cache-to: type=inline
-
       # 배포 결과 처리
       - name: Process Deploy Result
         uses: actions/github-script@v6
@@ -87,3 +83,21 @@ jobs:
             if (finalOutcome === 'failure') {
               core.setFailed('Deployment process failed');
             }
+  pull_from_registry:
+    name: Connect server ssh and pull from container registry
+    needs: push_to_registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: connect ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USERNAME }}
+          password: ${{ secrets.DEV_PASSWORD }}
+          port: ${{ secrets.DEV_PORT }}
+          script: |
+            docker pull ${{ secrets.NCP_CONTAINER_REGISTRY }}/tag-name
+            docker stop $(docker ps -a -q)
+            docker rm $(docker ps -a -q)
+            docker run -d -p 3000:80 --env-file ${{ secrets.ENV_FILENAME_FRONTEND }} ${{ secrets.NCP_CONTAINER_REGISTRY }}/tag-name
+            docker image prune -f
