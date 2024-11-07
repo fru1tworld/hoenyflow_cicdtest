@@ -2,35 +2,35 @@ name: Frontend PR Check
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'packages/frontend/**'
-      - 'packages/shared/**'
+      - "packages/frontend/**"
+      - "packages/shared/**"
 
 jobs:
   build-check:
     if: contains(github.head_ref, 'dev-fe')
     runs-on: ubuntu-latest
-    
+
     # Checks API 권한
     permissions:
       checks: write
-      
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - uses: pnpm/action-setup@v2
         with:
           version: 9.4.0
-      
+
       - uses: actions/setup-node@v3
         with:
-          node-version: '22.9.0'
-          cache: 'pnpm'
-      
+          node-version: "22.9.0"
+          cache: "pnpm"
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Build frontend
         id: build
         working-directory: packages/frontend
@@ -44,7 +44,7 @@ jobs:
 
             console.log("Repo context:", context.repo);  // repo 정보 확인용 로그
             const buildOutcome = '${{ steps.build.outcome }}';
-      
+
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
