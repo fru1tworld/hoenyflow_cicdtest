@@ -37,9 +37,11 @@ jobs:
         with:
           script: |
             const buildOutcome = '${{ steps.docker-build.outcome }}';
+            const repoName = context.repo.repo; 
+
             await github.rest.checks.create({
               owner: context.repo.owner,
-              repo: context.repo.name,
+              repo: repoName, // 리포지토리 이름 명시적 지정
               name: '백엔드 배포 상태',
               head_sha: context.sha,
               status: 'completed',

@@ -88,6 +88,8 @@ jobs:
               dockerOutcome === 'success' 
                 ? 'success' : 'failure';
 
+
+            const repoName = context.repo.repo;  
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.name,
