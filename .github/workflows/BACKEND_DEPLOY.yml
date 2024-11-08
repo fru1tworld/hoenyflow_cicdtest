@@ -74,12 +74,12 @@ jobs:
             docker pull ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:blue-latest
             docker stop backend_blue || true
             docker rm backend_blue || true
-            docker run -d --name backend_blue -p 8081:8080 ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:blue-latest
+            docker run -d --name backend_blue -p 3000:3000 ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:blue-latest
           else
             docker pull ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:green-latest
             docker stop backend_green || true
             docker rm backend_green || true
-            docker run -d --name backend_green -p 8080:8080 ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:green-latest
+            docker run -d --name backend_green -p 3001:3000 ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:green-latest
           fi
 
       - name: Blue/Green 전환 완료 메시지 출력
