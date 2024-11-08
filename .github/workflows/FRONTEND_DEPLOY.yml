@@ -74,8 +74,8 @@ jobs:
           script: |
             const getKSTDate = () => {
               const date = new Date();
-              date.setHours(date.getHours() + 9); // UTC+9 (한국 시간)
-              return date.toISOString().replace('Z', '+09:00');
+              date.setHours(date.getHours() + 9); 
+              return date.toISOString();
             };
 
             const installOutcome = '${{ steps.install.outcome }}';
