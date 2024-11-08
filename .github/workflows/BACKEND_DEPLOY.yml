@@ -6,43 +6,43 @@ on:
       - "packages/backend/**"
       - "packages/shared/**"
 jobs:
-  push_to_registry:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 코드 체크아웃
-        uses: actions/checkout@v3
+  # push_to_registry:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 코드 체크아웃
+  #       uses: actions/checkout@v3
 
-      - name: Docker Buildx 설정
-        uses: docker/setup-buildx-action@v2
+  #     - name: Docker Buildx 설정
+  #       uses: docker/setup-buildx-action@v2
 
-      - name: NCP 컨테이너 레지스트리 로그인
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.CONTAINER_REGISTRY_URL }}
-          username: ${{ secrets.NCP_ACCESS_KEY }}
-          password: ${{ secrets.NCP_SECERET_KEY }}
+  #     - name: NCP 컨테이너 레지스트리 로그인
+  #       uses: docker/login-action@v2
+  #       with:
+  #         registry: ${{ secrets.CONTAINER_REGISTRY_URL }}
+  #         username: ${{ secrets.NCP_ACCESS_KEY }}
+  #         password: ${{ secrets.NCP_SECERET_KEY }}
 
-      - name: 도커 이미지 빌드 및 푸시 (Blue)
-        id: docker-build-blue
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ./packages/backend/Dockerfile.blue
-          push: true
-          tags: ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:blue-latest
+  #     - name: 도커 이미지 빌드 및 푸시 (Blue)
+  #       id: docker-build-blue
+  #       uses: docker/build-push-action@v3
+  #       with:
+  #         context: .
+  #         file: ./packages/backend/Dockerfile.blue
+  #         push: true
+  #         tags: ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:blue-latest
 
-      - name: 도커 이미지 빌드 및 푸시 (Green)
-        id: docker-build-green
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ./packages/backend/Dockerfile.green
-          push: true
-          tags: ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:green-latest
+  #     - name: 도커 이미지 빌드 및 푸시 (Green)
+  #       id: docker-build-green
+  #       uses: docker/build-push-action@v3
+  #       with:
+  #         context: .
+  #         file: ./packages/backend/Dockerfile.green
+  #         push: true
+  #         tags: ${{ secrets.CONTAINER_REGISTRY_URL }}/nodejs-server:green-latest
 
   pull_from_registry:
     runs-on: ubuntu-latest
-    needs: push_to_registry
+    # needs: push_to_registry
     steps:
       - name: SSH로 서버 접속
         uses: appleboy/ssh-action@v0.1.6
@@ -61,8 +61,11 @@ jobs:
         run: |
           if docker ps --filter "name=backend_green" --format '{{.Names}}' | grep -w backend_green; then
             echo "current=green" >> $GITHUB_ENV
-          else
+          elif docker ps --filter "name=backend_blue" --format '{{.Names}}' | grep -w backend_blue; then
             echo "current=blue" >> $GITHUB_ENV
+          else
+            echo "No active deployment found. Setting current=green as default."
+            echo "current=green" >> $GITHUB_ENV
           fi
 
       - name: 컨테이너 업데이트 및 Blue/Green 전환
