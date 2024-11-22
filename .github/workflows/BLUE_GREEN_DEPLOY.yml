@@ -31,8 +31,8 @@ jobs:
             echo "Error: MYSQL_PASSWORD is not set in GitHub Secrets"
             exit 1
           fi
-          if [ -z "${{ secrets.MYSQL_NAME }}" ]; then
-            echo "Error: MYSQL_NAME is not set in GitHub Secrets"
+          if [ -z "${{ secrets.MYSQL_DATABASE }}" ]; then
+            echo "Error: MYSQL_DATABASE is not set in GitHub Secrets"
             exit 1
           fi
           if [ -z "${{ secrets.DB_HOST }}" ]; then
@@ -46,7 +46,7 @@ jobs:
           echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-          echo "MYSQL_NAME=${{ secrets.MYSQL_NAME }}" >> .env
+          echo "MYSQL_DATABASE secrets.MYSQL_DATABASE }}" >> .env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
 
       - name: SSH로 서버 접속 및 배포
