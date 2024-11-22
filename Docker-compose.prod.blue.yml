@@ -12,7 +12,6 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
     networks:
       - app-network
-      - proxy-network
     extra_hosts:
       - "db-host:${DATABASE_HOST}"
 
@@ -24,8 +23,7 @@ services:
       - BACKEND_URL=http://backend-blue:3000
     networks:
       - app-network
-      - proxy-network
 
 networks:
-  proxy-network:
-    external: true
+  app-network:
+    driver: bridge 
