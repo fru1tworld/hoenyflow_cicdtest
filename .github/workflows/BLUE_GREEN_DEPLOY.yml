@@ -54,7 +54,7 @@ jobs:
             sudo restorecon -R /var/www/app
             cd /var/www/app
 
-            echo "$ENV_FILE_CONTENTS"| sudo tee .env > /dev/null
+            echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
             sudo chmod 644 .env 
 
 
