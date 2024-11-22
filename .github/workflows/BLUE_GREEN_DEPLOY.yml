@@ -50,7 +50,7 @@ jobs:
             sudo git clone https://github.com/${{ github.repository }} /var/www/app
             sudo restorecon -R /var/www/app
             cd /var/www/app
-            
+
             echo "$ENV_FILE_CONTENTS" | sudo tee .env > /dev/null
             sudo chmod 644 .env 
 
@@ -75,11 +75,6 @@ jobs:
             
             echo "현재 환경: $CURRENT_ENV"
             echo "새로운 환경: $NEW_ENV"
-            
-            # firewall-cmd로 포트 열기
-            sudo firewall-cmd --zone=public --add-port=80/tcp --permanent || true
-            sudo firewall-cmd --zone=public --add-port=3000/tcp --permanent || true
-            sudo firewall-cmd --reload || true
             
             # 새로운 환경의 docker-compose로 실행
             $DOCKER_COMPOSE_CMD -f docker-compose.prod.$NEW_ENV.yml --env-file .env up -d
