@@ -1,5 +1,5 @@
 services:
-  backend-green:
+  backend-blue:
     extends:
       file: Docker-compose.yml
       service: backend
@@ -16,7 +16,7 @@ services:
     networks:
       - app-network
 
-  frontend-green:
+  frontend-blue:
     ports:
       - "80:80"
     extends:
