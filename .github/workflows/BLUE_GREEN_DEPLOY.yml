@@ -81,7 +81,8 @@ jobs:
             
             # 헬스 체크 대기
             sleep 15
-            
+
+
             # curl 설치 확인 및 헬스 체크
             if ! command -v curl &> /dev/null; then
               sudo dnf install -y curl

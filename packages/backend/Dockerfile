@@ -52,6 +52,7 @@ WORKDIR /app/packages/backend
 
 # 포트 설정
 EXPOSE 3000
+EXPOSE 9001
 
 # 애플리케이션 실행
 CMD ["node", "dist/main"]
