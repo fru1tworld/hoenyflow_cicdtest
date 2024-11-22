@@ -114,7 +114,6 @@ jobs:
                 sudo mv /var/www/app_backup_$TIMESTAMP /var/www/app
                 sudo restorecon -R /var/www/app
               fi
-              
               echo "롤백이 완료되었습니다."
               exit 1
             fi
