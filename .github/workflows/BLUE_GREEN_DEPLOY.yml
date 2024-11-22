@@ -1,0 +1,111 @@
+name: blue-green deploy
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  push_to_registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v3
+        
+      - name: Docker Buildx 설정
+        uses: docker/setup-buildx-action@v2
+        
+      - name: NCP 컨테이너 레지스트리 로그인
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.CONTAINER_REGISTRY_URL }}
+          username: ${{ secrets.NCP_ACCESS_KEY }}
+          password: ${{ secrets.NCP_SECRET_KEY }}
+          
+      - name: 타임스탬프 생성
+        id: timestamp
+        run: echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          
+      - name: 백엔드 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./packages/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.CONTAINER_REGISTRY_URL }}/backend:${{ github.sha }}
+            ${{ secrets.CONTAINER_REGISTRY_URL }}/backend:blue-${{ steps.timestamp.outputs.timestamp }}
+            ${{ secrets.CONTAINER_REGISTRY_URL }}/backend:green-${{ steps.timestamp.outputs.timestamp }}
+            
+      - name: Nginx 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./packages/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.CONTAINER_REGISTRY_URL }}/nginx:${{ github.sha }}
+            ${{ secrets.CONTAINER_REGISTRY_URL }}/nginx:blue-${{ steps.timestamp.outputs.timestamp }}
+            ${{ secrets.CONTAINER_REGISTRY_URL }}/nginx:green-${{ steps.timestamp.outputs.timestamp }}
+
+#   deploy:
+#     needs: push_to_registry
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: SSH로 서버 접속 및 배포
+#         uses: appleboy/ssh-action@v0.1.6
+#         with:
+#           host: ${{ secrets.SERVER_HOST }}
+#           username: ${{ secrets.SERVER_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: ${{ secrets.SERVER_SSH_PORT }}
+#           script: |
+#             # NCP 컨테이너 레지스트리 로그인
+#             docker login -u ${{ secrets.NCP_ACCESS_KEY }} -p ${{ secrets.NCP_SECRET_KEY }} ${{ secrets.CONTAINER_REGISTRY_URL }}
+            
+#             # 현재 실행 중인 환경 확인
+#             CURRENT_ENV=$(docker ps --filter "name=nginx-blue" --format "{{.Names}}" | grep -q "nginx-blue" && echo "blue" || echo "green")
+            
+#             # 새로 배포할 환경 결정
+#             if [ "$CURRENT_ENV" = "blue" ]; then
+#               NEW_ENV="green"
+#               CURRENT_COLOR="blue"
+#             else
+#               NEW_ENV="blue"
+#               CURRENT_COLOR="green"
+#             fi
+            
+#             echo "현재 환경: $CURRENT_ENV"
+#             echo "배포할 환경: $NEW_ENV"
+            
+#             # 새로운 이미지 pull
+#             docker pull ${{ secrets.CONTAINER_REGISTRY_URL }}/backend:${{ github.sha }}
+#             docker pull ${{ secrets.CONTAINER_REGISTRY_URL }}/nginx:${{ github.sha }}
+            
+#             # 새로운 환경의 docker-compose 파일로 배포
+#             docker compose -f docker-compose.prod.$NEW_ENV.yml --env-file .env up -d
+            
+#             # 헬스 체크 (15초 대기)
+#             sleep 15
+            
+#             # Nginx 및 백엔드 헬스 체크
+#             NGINX_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80/health)
+#             BACKEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health)
+            
+#             if [ "$NGINX_HEALTH" = "200" ] && [ "$BACKEND_HEALTH" = "200" ]; then
+#               echo "새로운 환경이 정상적으로 실행되었습니다."
+              
+#               # Nginx upstream 설정 업데이트
+#               docker exec nginx-$NEW_ENV sh -c "ln -sf /etc/nginx/conf.d/upstream_$NEW_ENV.conf /etc/nginx/conf.d/upstream_current.conf"
+#               docker exec nginx-$NEW_ENV nginx -s reload
+              
+#               # 이전 환경 종료
+#               if [ -n "$CURRENT_COLOR" ]; then
+#                 docker compose -f docker-compose.prod.$CURRENT_COLOR.yml down
+#               fi
+              
+#               echo "배포가 완료되었습니다."
+#             else
+#               echo "새로운 환경이 정상적으로 시작되지 않았습니다. 롤백을 시작합니다."
+#               # 새 환경 제거
+#               docker compose -f docker-compose.prod.$NEW_ENV.yml down
+#               exit 1
+#             fi
