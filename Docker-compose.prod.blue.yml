@@ -5,15 +5,15 @@ services:
       service: backend
     environment:
       - NODE_ENV=production
-      - DATABASE_HOST=${DATABASE_HOST}
-      - DATABASE_PORT=${DATABASE_PORT}
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
-      - DATABASE_NAME=${DATABASE_NAME}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_NAME=${MYSQL_NAME}
     networks:
       - app-network
     extra_hosts:
-      - "db-host:${DATABASE_HOST}"
+      - "db-host:${DB_HOST}"
 
   frontend-blue:
     extends:
