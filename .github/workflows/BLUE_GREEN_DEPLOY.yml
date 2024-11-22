@@ -12,6 +12,7 @@ jobs:
       - name: 타임스탬프 생성
         id: timestamp
         run: echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
       
       - name: SSH로 서버 접속 및 배포
         uses: appleboy/ssh-action@v0.1.6
