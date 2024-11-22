@@ -56,6 +56,7 @@ jobs:
             echo ${{ secrets.ENV_FILE_CONTENTS }} | sudo tee .env > /dev/null
             sudo chmod 644 .env 
 
+
             # 필요한 권한 설정
             sudo chown -R $USER:$USER /var/www/app
             sudo chmod -R 755 /var/www/app
