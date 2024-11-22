@@ -28,6 +28,7 @@ jobs:
               sudo semanage fcontext -a -t httpd_sys_content_t "/var/www/app(/.*)?"
               sudo semanage fcontext -a -t httpd_sys_content_t "/var/www/app_backup_(.*)(/.*)?"
             fi
+
             
             # 배포 타임스탬프 가져오기
             TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
