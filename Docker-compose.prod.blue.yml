@@ -1,7 +1,7 @@
 services:
   backend-blue:
     extends:
-      file: docker-compose.yml
+      file: Docker-compose.yml
       service: backend
     environment:
       - NODE_ENV=production
@@ -18,7 +18,7 @@ services:
 
   frontend-blue:
     extends:
-      file: docker-compose.yml
+      file: Docker-compose.yml
       service: frontend
     environment:
       - BACKEND_URL=http://backend-blue:3000

@@ -1,7 +1,7 @@
 services:
   backend-green:
     extends:
-      file: docker-compose.yml
+      file: Docker-compose.yml
       service: backend
     environment:
       - NODE_ENV=production
@@ -15,7 +15,7 @@ services:
 
   frontend-green:
     extends:
-      file: docker-compose.yml
+      file: Docker-compose.yml
       service: frontend
     environment:
       - BACKEND_URL=http://backend-green:3000

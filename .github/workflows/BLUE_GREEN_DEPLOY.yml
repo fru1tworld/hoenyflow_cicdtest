@@ -79,7 +79,7 @@ jobs:
             echo "새로운 환경: $NEW_ENV"
             
             # 새로운 환경의 docker-compose로 실행
-            $DOCKER_COMPOSE_CMD -f docker-compose.prod.$NEW_ENV.yml --env-file .env up -d
+            $DOCKER_COMPOSE_CMD -f Docker-compose.prod.$NEW_ENV.yml --env-file .env up -d
             
             # 헬스 체크 대기
             sleep 15
@@ -99,7 +99,7 @@ jobs:
               
               # 이전 환경 종료
               if [ -n "$CURRENT_COLOR" ]; then
-                $DOCKER_COMPOSE_CMD -f docker-compose.prod.$CURRENT_COLOR.yml down
+                $DOCKER_COMPOSE_CMD -f Docker-compose.prod.$CURRENT_COLOR.yml down
               fi
               
               echo "배포가 완료되었습니다."
@@ -109,7 +109,7 @@ jobs:
               
             else
               echo "새로운 환경 실행 실패. 롤백을 시작합니다."
-              $DOCKER_COMPOSE_CMD -f docker-compose.prod.$NEW_ENV.yml down
+              $DOCKER_COMPOSE_CMD -f Docker-compose.prod.$NEW_ENV.yml down
               
               # 롤백
               if [ -d "/var/www/app_backup_$TIMESTAMP" ]; then
