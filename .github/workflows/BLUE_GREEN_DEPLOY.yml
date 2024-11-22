@@ -113,7 +113,7 @@ jobs:
             $DOCKER_COMPOSE_CMD -f Docker-compose.prod.$NEW_ENV.yml --env-file .env up -d
             
             # 헬스 체크 대기
-            sleep 1500
+            sleep 15
 
 
             # curl 설치 확인 및 헬스 체크
