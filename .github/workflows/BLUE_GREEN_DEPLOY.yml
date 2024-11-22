@@ -34,10 +34,10 @@ jobs:
             echo "배포 시작. 타임스탬프: $TIMESTAMP"
             
             # Docker Compose 명령어 확인 및 설정
-            if command -v Docker-compose &> /dev/null; then
-              DOCKER_COMPOSE_CMD="Docker-compose"
+            if command -v docker-compose &> /dev/null; then
+              DOCKER_COMPOSE_CMD="docker-compose"
             else
-              DOCKER_COMPOSE_CMD="Docker compose"
+              DOCKER_COMPOSE_CMD="docker compose"
             fi
             
             # 기존 디렉토리 백업 및 새 코드 가져오기
