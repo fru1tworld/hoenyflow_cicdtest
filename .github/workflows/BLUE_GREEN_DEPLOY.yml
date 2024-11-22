@@ -23,6 +23,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT }}
+          envs: ENV_FILE_CONTENTS
           script: |
             # SELinux 컨텍스트 설정
             if command -v semanage &> /dev/null; then
@@ -53,7 +54,7 @@ jobs:
             sudo restorecon -R /var/www/app
             cd /var/www/app
 
-            echo ${{ secrets.ENV_FILE_CONTENTS }} | sudo tee .env > /dev/null
+            echo "$ENV_FILE_CONTENTS"| sudo tee .env > /dev/null
             sudo chmod 644 .env 
 
 
