@@ -15,6 +15,7 @@ services:
     extra_hosts:
       - "db-host:${DB_HOST}"
 
+
   frontend-blue:
     extends:
       file: docker-compose.yml
